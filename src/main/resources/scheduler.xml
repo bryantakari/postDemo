@@ -8,5 +8,4 @@
         <property name="poolSize" value="5"></property>
         <property name="threadNamePrefix" value="ThreadPoolScheduler"></property>
     </bean>
-
 </beans>
