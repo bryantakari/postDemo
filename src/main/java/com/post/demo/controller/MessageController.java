@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.ImportResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -26,8 +27,11 @@ public class MessageController {
     @Autowired
     MessageManager messageManager;
 
+
+
     @PostMapping("/message/schedule")
     public ResponseEntity<MessageResponse> scheduleMessage(@RequestBody MessageRequest request){
+//        kafkaTemplate.send("messageTopicA",request.getMessage());
         return new ResponseEntity<>(messageManager.insert(request), HttpStatus.CREATED);
     }
 

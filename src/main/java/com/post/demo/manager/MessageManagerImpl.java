@@ -3,17 +3,21 @@ package com.post.demo.manager;
 import com.post.demo.controller.MessageController;
 import com.post.demo.model.Message;
 import com.post.demo.model.User;
+import com.post.demo.model.dto.MessageDTO;
 import com.post.demo.repository.MessageRepository;
 import com.post.demo.repository.UserRepository;
 import com.post.demo.request.MessageRequest;
 import com.post.demo.response.MessageResponse;
 import com.post.demo.scheduler.BizOrderTask;
+import com.post.demo.service.KafkaProducer;
 import com.post.demo.util.ErrorContextEnum;
 import com.post.demo.util.MessageTypeEnum;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.ImportResource;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.scheduling.support.CronTrigger;
 
@@ -31,12 +35,17 @@ public class MessageManagerImpl implements MessageManager{
 
     @Autowired
     MessageRepository messageRepository;
+
+    @Autowired
+    private KafkaProducer kafkaProducer;
+
     @Override
     public MessageResponse insert(MessageRequest request) {
         MessageResponse response = new MessageResponse();
         response.setSuccess(false);
 
         try{
+
             if(null == request.getSenderId() || null == request.getReceiverId() || null == request.getMessage()){
                 response.setErrorType(ErrorContextEnum.PARAM_ILLEGAL.getCode());
                 response.setErrorMessage(ErrorContextEnum.PARAM_ILLEGAL.getValue());
@@ -70,6 +79,11 @@ public class MessageManagerImpl implements MessageManager{
             Date date = new Date();
             message.setGmtCreated(date);
             message.setGmtUpdated(date);
+            MessageDTO messageDTO = new MessageDTO();
+            messageDTO.setMessageId("MessageId_"+message.getContent());
+            messageDTO.setSenderId(message.getSender().getUserId());
+            messageDTO.setContent(message.getContent());
+            kafkaProducer.sendMessageDTO(messageDTO);
             if(("true").equalsIgnoreCase(request.getIsScheduled())){
                 log.info("This Scheduler Using: "+taskScheduler.getThreadNamePrefix() + " date: " + date);
                 message.setType(MessageTypeEnum.MESSAGE_TYPE_SCHEDULED.getValue());
