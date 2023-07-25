@@ -9,9 +9,11 @@ import com.post.demo.repository.UserRepository;
 import com.post.demo.request.MessageRequest;
 import com.post.demo.response.MessageResponse;
 import com.post.demo.scheduler.BizOrderTask;
+import com.post.demo.scheduler.SchedulerTask;
 import com.post.demo.service.KafkaProducer;
 import com.post.demo.util.ErrorContextEnum;
 import com.post.demo.util.MessageTypeEnum;
+import jakarta.annotation.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,8 +23,8 @@ import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.scheduling.support.CronTrigger;
 
-import java.util.Date;
-import java.util.Optional;
+import java.util.*;
+
 @ImportResource("classpath:scheduler.xml")
 public class MessageManagerImpl implements MessageManager{
     private static final Logger log = LoggerFactory.getLogger(MessageController.class);
@@ -35,6 +37,9 @@ public class MessageManagerImpl implements MessageManager{
 
     @Autowired
     MessageRepository messageRepository;
+
+    @Resource
+    Map<String, SchedulerTask> listBizOrderTask;
 
     @Autowired
     private KafkaProducer kafkaProducer;
@@ -79,15 +84,11 @@ public class MessageManagerImpl implements MessageManager{
             Date date = new Date();
             message.setGmtCreated(date);
             message.setGmtUpdated(date);
-            MessageDTO messageDTO = new MessageDTO();
-            messageDTO.setMessageId("MessageId_"+message.getContent());
-            messageDTO.setSenderId(message.getSender().getUserId());
-            messageDTO.setContent(message.getContent());
-            kafkaProducer.sendMessageDTO(messageDTO);
+            log.info("bean: "+ listBizOrderTask.get("messaging"));
             if(("true").equalsIgnoreCase(request.getIsScheduled())){
                 log.info("This Scheduler Using: "+taskScheduler.getThreadNamePrefix() + " date: " + date);
                 message.setType(MessageTypeEnum.MESSAGE_TYPE_SCHEDULED.getValue());
-                BizOrderTask bizOrderTask = new BizOrderTask();
+                BizOrderTask bizOrderTask = (BizOrderTask) listBizOrderTask.get("messaging");
                 bizOrderTask.setMessage(request.getMessage());
                 bizOrderTask.setMessaging(message);
                 CronTrigger cronTrigger = new CronTrigger("0 "+request.getMinutes()+" "+request.getHours()+" ? * *");
@@ -95,8 +96,10 @@ public class MessageManagerImpl implements MessageManager{
             }else{
                 log.info(" date: " + date);
                 message.setType(MessageTypeEnum.MESSAGE_TYPE_DIRECT.getValue());
-                messageRepository.save(message);
+               Message temp = (Message)messageRepository.save(message);
+                log.info("success saved! message: "+ temp.getContent());
             }
+
             response.setSuccess(true);
             response.setErrorMessage(null);
             response.setErrorType(null);
