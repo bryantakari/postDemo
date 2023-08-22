@@ -70,6 +70,7 @@ public class MessageManagerImpl implements MessageManager{
                 response.setErrorMessage(ErrorContextEnum.PARAM_ILLEGAL.getValue());
                 throw new Exception("receiver not found");
             }
+//            log.info("Validate Time is wrong!"+request.getMinutes());
             if(!request.isValidate()){
                 log.info("Validate Time is wrong!");
                 response.setErrorMessage(ErrorContextEnum.PARAM_ILLEGAL.getValue());
@@ -82,16 +83,28 @@ public class MessageManagerImpl implements MessageManager{
             message.setSender(sender.get());
             message.setReceiver(receiver.get());
             Date date = new Date();
+            Date now = new Date();
             message.setGmtCreated(date);
             message.setGmtUpdated(date);
-            log.info("bean: "+ listBizOrderTask.get("messaging"));
+            log.info("Hour: "+Integer.parseInt(request.getHours())+"  request.getHours()"+request.getHours());
+            date.setHours(Integer.parseInt(request.getHours()));
+            log.info("Minutes: "+Integer.getInteger(request.getMinutes()));
+            date.setMinutes(Integer.parseInt(request.getMinutes()));
+            log.info("Seconds: "+Integer.getInteger(request.getSeconds()));
+            date.setSeconds(Integer.parseInt(request.getSeconds()));
+            if(date.before(now)){
+                log.info("Date Time cannot be in past!");
+                response.setErrorMessage(ErrorContextEnum.PARAM_ILLEGAL.getValue());
+                response.setErrorType(ErrorContextEnum.PARAM_ILLEGAL.getCode());
+                throw new Exception("Date Time cannot be in past!");
+            }
             if(("true").equalsIgnoreCase(request.getIsScheduled())){
                 log.info("This Scheduler Using: "+taskScheduler.getThreadNamePrefix() + " date: " + date);
                 message.setType(MessageTypeEnum.MESSAGE_TYPE_SCHEDULED.getValue());
                 BizOrderTask bizOrderTask = (BizOrderTask) listBizOrderTask.get("messaging");
                 bizOrderTask.setMessage(request.getMessage());
                 bizOrderTask.setMessaging(message);
-                CronTrigger cronTrigger = new CronTrigger("0 "+request.getMinutes()+" "+request.getHours()+" ? * *");
+                CronTrigger cronTrigger = new CronTrigger(request.getSeconds()+" "+request.getMinutes()+" "+request.getHours()+" ? * *");
                 taskScheduler.schedule(bizOrderTask,cronTrigger);
             }else{
                 log.info(" date: " + date);

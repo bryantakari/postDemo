@@ -18,7 +18,7 @@ public class MessageRequest {
         this.message = message;
     }
     public boolean isValidate(){
-        String regex = "([01]?[0-9]|2[0-3]):[0-5][0-9]";
+        String regex = "^([0-1]?\\d|2[0-3])(?::([0-5]?\\d))?(?::([0-5]?\\d))?$";
         Pattern p = Pattern.compile(regex);
         if(time == null){
             return false;
@@ -34,6 +34,10 @@ public class MessageRequest {
     public String getMinutes(){
         String []temp = time.split(":");
         return temp[1];
+    }
+    public String getSeconds(){
+        String []temp = time.split(":");
+        return temp[2];
     }
     public String getTime() {
         return time;
