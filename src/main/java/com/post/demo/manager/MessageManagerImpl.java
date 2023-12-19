@@ -44,6 +44,8 @@ public class MessageManagerImpl implements MessageManager{
     @Autowired
     private KafkaProducer kafkaProducer;
 
+
+
     @Override
     public MessageResponse insert(MessageRequest request) {
         MessageResponse response = new MessageResponse();
@@ -86,11 +88,8 @@ public class MessageManagerImpl implements MessageManager{
             Date now = new Date();
             message.setGmtCreated(date);
             message.setGmtUpdated(date);
-            log.info("Hour: "+Integer.parseInt(request.getHours())+"  request.getHours()"+request.getHours());
             date.setHours(Integer.parseInt(request.getHours()));
-            log.info("Minutes: "+Integer.getInteger(request.getMinutes()));
             date.setMinutes(Integer.parseInt(request.getMinutes()));
-            log.info("Seconds: "+Integer.getInteger(request.getSeconds()));
             date.setSeconds(Integer.parseInt(request.getSeconds()));
             if(date.before(now)){
                 log.info("Date Time cannot be in past!");
@@ -121,6 +120,23 @@ public class MessageManagerImpl implements MessageManager{
             log.info(e.getMessage());
             log.info("inserting Message is not executed!");
         }
+        return response;
+    }
+
+    @Override
+    public MessageResponse queryList() {
+        List<Message> messageList = messageRepository.findAll();
+        MessageResponse response = new MessageResponse();
+        response.setSuccess(true);
+        List<MessageDTO> convertMessage = new ArrayList<>();
+        for (Message message: messageList) {
+            MessageDTO mgDTO = new MessageDTO();
+            mgDTO.setContent(message.getContent());
+            mgDTO.setSenderId(message.getSender().getUserId());
+            mgDTO.setMessageId(message.getMessageId());
+            convertMessage.add(mgDTO);
+        }
+        response.setMessageDTOList(convertMessage);
         return response;
     }
 }

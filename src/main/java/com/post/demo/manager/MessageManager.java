@@ -5,4 +5,5 @@ import com.post.demo.response.MessageResponse;
 
 public interface MessageManager {
     public MessageResponse insert(MessageRequest request);
+    public MessageResponse queryList();
 }

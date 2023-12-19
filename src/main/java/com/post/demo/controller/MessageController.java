@@ -11,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -31,9 +32,17 @@ public class MessageController {
 
     @PostMapping("/message/schedule")
     public ResponseEntity<MessageResponse> scheduleMessage(@RequestBody MessageRequest request){
-//        kafkaTemplate.send("messageTopicA",request.getMessage());
         return new ResponseEntity<>(messageManager.insert(request), HttpStatus.CREATED);
     }
+
+    @GetMapping("/message")
+    public ResponseEntity<MessageResponse> getListMessage(){
+//
+        MessageResponse messageResponse = messageManager.queryList();
+        ResponseEntity<MessageResponse> response = new ResponseEntity<>(messageResponse,HttpStatus.CREATED);
+        return response;
+    }
+
 
     public void setTaskScheduler(ThreadPoolTaskScheduler taskScheduler) {
         this.taskScheduler = taskScheduler;

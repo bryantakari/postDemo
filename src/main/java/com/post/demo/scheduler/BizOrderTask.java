@@ -33,7 +33,7 @@ public class BizOrderTask implements SchedulerTask {
         messageDTO.setContent(messaging.getContent());
         kafkaProducer.sendMessageDTO(messageDTO);
         messageRepository.save(messaging);
-        log.info("Message:["+message+" ],The time is now {}", dateFormat.format(new Date()));
+        log.info("Message Publish To Message Broker :["+message+" ],The time is now {}", dateFormat.format(new Date()));
     }
 
     public String getMessage() {
